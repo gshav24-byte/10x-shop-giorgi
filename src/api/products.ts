@@ -14,6 +14,15 @@ function applyStockOverrides(products: Product[]): Product[] {
   });
 }
 
+export async function fetchAllProducts(): Promise<Product[]> {
+  const response = await fetch("https://dummyjson.com/products?limit=0");
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
+  }
+  const data: ProductsResponse = await response.json();
+  return applyStockOverrides(data.products);
+}
+
 export async function fetchProducts(
   limit = 12,
   skip = 0,
@@ -43,10 +52,13 @@ export async function fetchCategories(): Promise<
     throw new Error("Failed to fetch categories");
   }
   const data = await response.json();
-  return data.map((cat: any) =>
+  return data.map((cat: unknown) =>
     typeof cat === "string"
       ? { slug: cat, name: cat }
-      : { slug: cat.slug, name: cat.name },
+      : {
+          slug: (cat as { slug: string }).slug,
+          name: (cat as { name: string }).name,
+        },
   );
 }
 
